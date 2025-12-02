@@ -116,25 +116,19 @@
     gap: var(--spacing-xs);
 }
 
-.sizeBtn {
-    width: 40px;
+.sizeBadge {
+    min-width: 40px;
     height: 40px;
-    border: 1px solid #ddd;
-    border-radius: 50%;
+    padding: 0 10px;
+    background-color: #f0f0f0;
+    color: #333;
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
-}
-
-.sizeBtn:hover {
-    border-color: var(--color-primary-dark);
-}
-
-.activeSize {
-    background-color: var(--color-primary-dark);
-    color: var(--color-white);
-    border-color: var(--color-primary-dark);
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: 1px solid #ddd;
 }
 
 .measurements {

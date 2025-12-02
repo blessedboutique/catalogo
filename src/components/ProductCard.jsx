@@ -14,7 +14,7 @@ const ProductCard = ({ product }) => {
                 <h3 className={styles.name}>{product.name}</h3>
                 <p className={styles.category}>{product.category}</p>
                 <div className={styles.priceRow}>
-                    <p className={styles.price}>${product.price.toFixed(2)}</p>
+                    <p className={styles.price}>Bs. {product.price.toFixed(2)}</p>
                     {product.status === 'sold' && <span className={styles.soldBadge}>AGOTADO</span>}
                 </div>
             </div>

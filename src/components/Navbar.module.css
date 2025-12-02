@@ -20,6 +20,20 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.2;
+    text-decoration: none;
+}
+
+.subtitle {
+    font-size: 0.65rem;
+    font-weight: 400;
+    letter-spacing: 3px;
+    color: #888;
+    margin-top: -2px;
+    text-transform: uppercase;
 }
 
 .links {
@@ -32,6 +46,8 @@
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 1px;
+    text-decoration: none;
+    color: var(--color-text);
 }
 
 .link:hover {

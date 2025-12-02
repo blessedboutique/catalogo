@@ -33,9 +33,21 @@ const ProductDetail = () => {
         );
     }
 
-    const whatsappNumber = "59100000000"; // Reemplazar con el número real
-    const message = `Hola, me interesa el vestido ${product.name} en talla ${selectedSize}.`;
+    const whatsappNumber = "59172730173"; // Número actualizado
+    // Mensaje genérico ya que no se selecciona talla específica
+    const message = `Hola, me interesa el vestido ${product.name}.`;
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+    // Función para corregir rutas de imágenes
+    const getImageUrl = (img) => {
+        if (!img) return '';
+        if (img.startsWith('http') || img.startsWith('data:')) {
+            return img;
+        }
+        // Si es ruta relativa local, asegurar que empiece con /catalogo/ si estamos en producción
+        // O simplemente usar la ruta relativa correcta desde la raíz
+        return img.startsWith('/') ? `/catalogo${img}` : img;
+    };
 
     return (
         <div className="container">
@@ -64,7 +76,7 @@ const ProductDetail = () => {
                 <div className={styles.info}>
                     <h1 className={styles.title}>{product.name}</h1>
                     <p className={styles.category}>{product.category}</p>
-                    <p className={styles.price}>${product.price.toFixed(2)}</p>
+                    <p className={styles.price}>Bs. {product.price.toFixed(2)}</p>
 
                     <p className={styles.description}>{product.description}</p>
 
@@ -72,13 +84,12 @@ const ProductDetail = () => {
                         <h3 className={styles.sectionTitle}>Tallas Disponibles</h3>
                         <div className={styles.sizes}>
                             {product.sizes.map(size => (
-                                <button
+                                <span
                                     key={size}
-                                    className={`${styles.sizeBtn} ${selectedSize === size ? styles.activeSize : ''}`}
-                                    onClick={() => setSelectedSize(size)}
+                                    className={styles.sizeBadge}
                                 >
                                     {size}
-                                </button>
+                                </span>
                             ))}
                         </div>
                     </div>
