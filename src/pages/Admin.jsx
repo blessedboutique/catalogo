@@ -134,35 +134,47 @@ const Admin = () => {
             const [owner, repoName] = repo.split('/');
             const gh = new GitHubService(token, owner, repoName);
 
-            let imageUrls = [...newProduct.images]; // Keep existing URLs if any (e.g. manual input)
-
+            // 1. Upload new images
+            let newImageUrls = [];
             if (imageFiles.length > 0) {
                 for (let i = 0; i < imageFiles.length; i++) {
                     setStatus(`Subiendo imagen ${i + 1} de ${imageFiles.length}...`);
                     const url = await gh.uploadImage(imageFiles[i]);
-                    imageUrls.push(url);
+                    newImageUrls.push(url);
                 }
             }
 
-            // If user pasted a URL in the text input, add it (assuming newProduct.images might handle manual entry too, but for now we just use the uploaded ones primarily or what was in state)
-            // Actually, let's just use the uploaded ones + whatever was manually added if we add a manual input back.
-            // For simplicity, we'll assume the user uses the file uploader OR we could add a text input for external URLs.
-            // Let's stick to the file uploader as primary.
+            // 2. Combine with existing images (if any were kept)
+            const finalImages = [...newProduct.images, ...newImageUrls];
 
+            // 3. Create new product object
             const id = Date.now().toString();
             const productToAdd = {
                 ...newProduct,
                 id,
-                images: imageUrls,
+                images: finalImages,
                 price: parseFloat(newProduct.price)
             };
 
+            // 4. Update local list
             const updatedProducts = [...products, productToAdd];
 
-            setStatus('Actualizando base de datos...');
-            const result = await gh.saveProducts(updatedProducts, sha);
+            // 5. Save to GitHub
+            setStatus('Guardando en base de datos...');
+            // IMPORTANT: Fetch latest SHA before saving to avoid conflicts
+            const currentData = await gh.getProducts();
+            const currentSha = currentData.sha;
 
-            setProducts(updatedProducts);
+            // If we fetched new data, we should probably merge, but for simplicity we append to our local known list
+            // However, to be safe, let's use the fetched list + new product
+            // Ideally we should merge, but let's assume single admin user for now.
+            // Better approach: Use the fresh list from GitHub + new product
+            const freshProducts = currentData.content || [];
+            const finalProductsList = [...freshProducts, productToAdd];
+
+            const result = await gh.saveProducts(finalProductsList, currentSha);
+
+            setProducts(finalProductsList);
             setSha(result.content.sha);
 
             // Reset form
@@ -179,7 +191,7 @@ const Admin = () => {
             });
             setImageFiles([]);
             setImagePreviews([]);
-            setStatus('¡Producto guardado exitosamente!');
+            setStatus('¡Producto guardado exitosamente! Aparecerá en el catálogo en unos minutos.');
         } catch (error) {
             console.error(error);
             setStatus('Error al guardar: ' + error.message);
@@ -191,6 +203,7 @@ const Admin = () => {
     const toggleProductStatus = async (productId) => {
         if (!confirm('¿Cambiar estado del producto?')) return;
 
+        // Optimistic update
         const updatedProducts = products.map(p => {
             if (p.id === productId) {
                 return { ...p, status: p.status === 'sold' ? 'available' : 'sold' };
@@ -202,7 +215,7 @@ const Admin = () => {
     };
 
     const deleteProduct = async (productId) => {
-        if (!confirm('¿Estás seguro de eliminar este producto?')) return;
+        if (!confirm('¿Estás seguro de eliminar este producto? Esta acción no se puede deshacer.')) return;
 
         const updatedProducts = products.filter(p => p.id !== productId);
         await saveChanges(updatedProducts);
@@ -210,16 +223,24 @@ const Admin = () => {
 
     const saveChanges = async (newProductsList) => {
         setLoading(true);
-        setStatus('Guardando cambios...');
+        setStatus('Guardando cambios en GitHub...');
         try {
             const [owner, repoName] = repo.split('/');
             const gh = new GitHubService(token, owner, repoName);
-            const result = await gh.saveProducts(newProductsList, sha);
+
+            // Get latest SHA first
+            const currentData = await gh.getProducts();
+
+            const result = await gh.saveProducts(newProductsList, currentData.sha);
+
             setProducts(newProductsList);
             setSha(result.content.sha);
-            setStatus('Cambios guardados.');
+            setStatus('Cambios guardados correctamente.');
         } catch (error) {
-            setStatus('Error: ' + error.message);
+            console.error(error);
+            setStatus('Error al guardar cambios: ' + error.message);
+            // Revert local changes if needed (reload)
+            loadProducts();
         } finally {
             setLoading(false);
         }
@@ -280,6 +301,7 @@ const Admin = () => {
                         className={styles.input}
                     />
                     <button onClick={handleSaveCredentials} className="btn btn-outline">Conectar</button>
+                    <button onClick={loadProducts} className="btn btn-outline" title="Recargar productos desde GitHub">🔄</button>
                 </div>
                 {status && <p className={styles.status}>{status}</p>}
             </div>

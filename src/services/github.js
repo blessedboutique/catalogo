@@ -71,10 +71,10 @@ export class GitHubService {
                         branch: this.branch,
                     });
 
-                    // Return the public URL
-                    // For GitHub Pages, it's usually relative or absolute based on repo
-                    // We return relative path for simplicity in usage
-                    resolve(`./images/${fileName}`);
+                    // Return the raw GitHub URL so it works immediately without waiting for Pages build
+                    // Format: https://raw.githubusercontent.com/{owner}/{repo}/{branch}/public/images/{fileName}
+                    const rawUrl = `https://raw.githubusercontent.com/${this.owner}/${this.repo}/${this.branch}/public/images/${fileName}`;
+                    resolve(rawUrl);
                 } catch (error) {
                     reject(error);
                 }
